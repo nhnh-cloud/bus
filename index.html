@@ -526,8 +526,8 @@
         const psr = first.PSR || '—';
 
         // Today range logic:
-        // - If fnd still has today → use official forecast min/max as 「今日預測」
-        // - Otherwise (after midday) → show observed range as 「今日迄今」
+        // - If fnd still has today → use official forecast min/max as 「今日預溫度測預测」
+        // - Otherwise (after midday) → show observed range as 「今日溫度預测」
         const today = new Date();
         const todayStr = today.getFullYear() +
           String(today.getMonth() + 1).padStart(2, '0') +
@@ -539,7 +539,7 @@
           rangeLabel = '今日預測';
           rangeText = `${forecastMin} – ${forecastMax}°C`;
         } else if (observedMin != null && observedMax != null) {
-          rangeLabel = '今日迄今';
+          rangeLabel = '香港氣溫預測介乎約';
           rangeText = `${observedMin} – ${observedMax}°C`;
         } else if (forecastMin != null && forecastMax != null) {
           rangeLabel = first.week ? `${first.week}預測` : '預測';
