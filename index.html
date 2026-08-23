@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>嘉翠園 交通 ETA 2.4.1 </title>
+    <title>嘉翠園 交通 ETA v3.2 </title>
     <style>
         * {
             box-sizing: border-box;
@@ -242,17 +242,17 @@
     <script>
         // Input Bus Data Set Specification
         const BUS_DATA_RAW = `
-KMB 38 平田 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/2658CCFAB79763B6/38/1 觀塘區
-KMB 38P 平田 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8956F5FA7B620297/38P/1 觀塘區
+MB 38 平田 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/38/1 觀塘區
+KMB 38P 平田 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/38P/1 觀塘區
 KMB 40P 觀塘碼頭 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/40P/1 觀塘區
-KMB 42C 藍田站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/2658CCFAB79763B6/42C/1 觀塘區
-KMB X42P 藍田站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/2658CCFAB79763B6/X42P/1 觀塘區
-KMB 31B 奧運站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/26EB1A3C1E17889A/31B/1 油尖旺區
-KMB 32 奧運站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8998797A3D3E02A7/32/1 油尖旺區
-KMB 35A 尖沙咀東 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8CF45DD1D6B1FA4D/35A/1 油尖旺區
-KMB 35X 尖沙咀東 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8CF45DD1D6B1FA4D/35X/1 油尖旺區
-KMB 36B 高鐵西九龍站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8998797A3D3E02A7/36B/1 油尖旺區
-KMB 36X 尖沙咀東麼地道 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8998797A3D3E02A7/36X/1 油尖旺區
+KMB 42C 藍田站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/42C/1 觀塘區
+KMB X42P 藍田站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/X42P/1 觀塘區
+KMB 31B 奧運站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/31B/1 油尖旺區
+KMB 32 奧運站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/32/1 油尖旺區
+KMB 35A 尖沙咀東 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/35A/1 油尖旺區
+KMB 35X 尖沙咀東 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/35X/1 油尖旺區
+KMB 36B 高鐵西九龍站 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/36B/1 油尖旺區
+KMB 36X 尖沙咀東麼地道 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/C3672D8D28801773/36X/1 油尖旺區
 KMB A30 機場及港珠澳大橋 石排街嘉翠園 https://data.etabus.gov.hk/v1/transport/kmb/eta/BEA270261C1E0D73/A30/1 新界離島區
 KMB 936 銅鑼灣棉花路 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8CF45DD1D6B1FA4D/936/1 港島區
 KMB 936A 銅鑼灣棉花路 葵涌業成街 https://data.etabus.gov.hk/v1/transport/kmb/eta/8CF45DD1D6B1FA4D/936A/1 港島區
