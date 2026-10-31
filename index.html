@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>交通 ETA v3.8</title>
+  <title>交通 ETA v4.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -25,13 +25,16 @@
       --eta-later: #5a7a5a;
       --district-bg: #f2f2ef;
       --district-text: #5a5a55;
+      --tint-ycs: #fafaf8;
+      --tint-ycs-head: #f2f2ef;
+      --tint-np: #f8f9fb;
+      --tint-np-head: #eef1f5;
+      --tint-kc: #f8faf8;
+      --tint-kc-head: #eef2ee;
+      --row-alt: #f0f0ec;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg);
@@ -54,27 +57,16 @@
     }
 
     @media (min-width: 640px) {
-      .page {
-        padding: 20px 18px 40px;
-        gap: 22px;
-      }
+      .page { padding: 20px 18px 40px; gap: 22px; }
     }
 
     @media (min-width: 900px) {
-      .page {
-        padding: 28px 24px 48px;
-        gap: 26px;
-      }
+      .page { padding: 28px 24px 48px; gap: 26px; }
     }
 
     @media (max-height: 500px) and (orientation: landscape) {
-      .page {
-        padding: 10px 14px 20px;
-        gap: 12px;
-      }
-      .site-header {
-        padding-bottom: 8px;
-      }
+      .page { padding: 10px 14px 20px; gap: 12px; }
+      .site-header { padding-bottom: 8px; }
     }
 
     .site-header {
@@ -94,10 +86,7 @@
       line-height: 1.3;
     }
 
-    .site-meta {
-      text-align: right;
-      flex-shrink: 0;
-    }
+    .site-meta { text-align: right; flex-shrink: 0; }
 
     .timestamp {
       font-size: 0.88rem;
@@ -119,6 +108,8 @@
       flex-direction: column;
       gap: 8px;
     }
+
+    .bus-section[hidden] { display: none !important; }
 
     .bus-header {
       display: flex;
@@ -159,6 +150,27 @@
     .col-dir   { width: 38%; }
     .col-eta   { width: 40%; }
 
+    .col-headers th {
+      background: var(--bg-soft) !important;
+      color: var(--text-muted) !important;
+    }
+
+    .section-title-row th {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #ffffff !important;
+      padding: 12px 10px 8px;
+      letter-spacing: 0.02em;
+      border-top: none;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      background: #4a4a46 !important;
+    }
+
+    .section-block-ycs .section-title-row th { background: #3f3f3b !important; }
+    .section-block-np .section-title-row th { background: #3a424c !important; }
+    .section-block-kc .section-title-row th { background: #3a453a !important; }
+
     .district-header-row th {
       background: var(--district-bg) !important;
       color: var(--district-text) !important;
@@ -171,33 +183,28 @@
       letter-spacing: 0.03em;
     }
 
-    /* Match site-header: 1px --border + same spacing as header→content */
-    .section-sep td {
+    .table-spacer-row td {
       padding: 0;
+      height: 10px;
       border: none;
-      height: 0;
-      line-height: 0;
       background: transparent;
-    }
-    .section-sep td > .section-sep-line {
-      display: block;
-      margin: 18px 0 12px;
-      border: none;
-      border-top: 1px solid var(--border);
-      height: 0;
+      line-height: 0;
     }
 
-    .bus-row {
-      border-bottom: 1px solid var(--border);
-    }
+    .section-block-ycs .district-header-row th { background: var(--tint-ycs-head) !important; }
+    .section-block-ycs .bus-row { background-color: #ffffff; }
+    .section-block-ycs .bus-row.row-alt { background-color: #ebebe6; }
 
-    .bus-row:last-child {
-      border-bottom: none;
-    }
+    .section-block-np .district-header-row th { background: var(--tint-np-head) !important; }
+    .section-block-np .bus-row { background-color: #ffffff; }
+    .section-block-np .bus-row.row-alt { background-color: #e8ecf2; }
 
-    .bus-row:nth-child(even) {
-      background-color: #fafaf8;
-    }
+    .section-block-kc .district-header-row th { background: var(--tint-kc-head) !important; }
+    .section-block-kc .bus-row { background-color: #ffffff; }
+    .section-block-kc .bus-row.row-alt { background-color: #e8eee8; }
+
+    .bus-row { border-bottom: 1px solid var(--border); background-color: #ffffff; }
+    .bus-row:last-child { border-bottom: none; }
 
     .bus-cell {
       padding: 8px 10px;
@@ -264,41 +271,33 @@
       text-decoration: none;
     }
 
-    html, body {
-      overflow-x: hidden;
-    }
+    html, body { overflow-x: hidden; }
   </style>
 </head>
 <body>
   <div class="page">
 
     <header class="site-header">
-      <div class="site-title">交通 ETA</div>
+      <div class="site-title">交通 ETA <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">v4.4</span></div>
       <div class="site-meta">
         <div class="timestamp" id="header-timestamp">—</div>
         <div class="update-counter" id="update-counter">更新: 0秒前</div>
       </div>
     </header>
 
-    <section class="bus-section">
-      <div class="bus-header">
-        <div class="bus-title">業成街 交通 ETA</div>
-      </div>
-
-      <table class="bus-table">
-        <thead>
-          <tr>
-            <th class="col-route">路線</th>
-            <th class="col-dir">開往</th>
-            <th class="col-eta">分鐘</th>
-          </tr>
-        </thead>
-        <tbody id="bus-table-body"></tbody>
-      </table>
-    </section>
+    <table class="bus-table" id="main-bus-table">
+      <thead>
+        <tr class="col-headers">
+          <th class="col-route">路線</th>
+          <th class="col-dir">開往</th>
+          <th class="col-eta">分鐘</th>
+        </tr>
+      </thead>
+      <tbody id="bus-table-body"></tbody>
+    </table>
 
     <footer class="page-footer">
-      巴士：KMB / GMB / 邨巴時刻表
+      巴士：KMB / GMB / 邨巴時刻表 · v4.4
     </footer>
   </div>
 
@@ -334,7 +333,10 @@ KMB 42C 青衣(長亨邨) 觀塘駿業里  https://data.etabus.gov.hk/v1/transpo
 
 KMB 38 葵盛(東) 觀塘轉車站 https://data.etabus.gov.hk/v1/transport/kmb/eta/3E73B73B12E25DCF/38/1 葵涌SiS
 KMB 40P 荃灣 觀塘轉車站 https://data.etabus.gov.hk/v1/transport/kmb/eta/4D3C6D74F6AE8C7D/40P/1 葵涌SiS
-KMB 42C 青衣(長亨邨) 觀塘轉車站  https://data.etabus.gov.hk/v1/transport/kmb/route-stop/42C/outbound/1 葵涌SiS
+KMB 42C 青衣(長亨邨) 觀塘轉車站 https://data.etabus.gov.hk/v1/transport/kmb/eta/3E73B73B12E25DCF/42C/1 葵涌SiS
+
+KMB 601 金鐘 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/114381B039350CBB/601/1 北角
+KMB 619 中環 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/F2127FD781019971/619/1 北角
 
     `.trim();
 
@@ -353,22 +355,42 @@ KMB 42C 青衣(長亨邨) 觀塘轉車站  https://data.etabus.gov.hk/v1/transpo
       ]
     };
 
-    const DISTRICT_ORDER = [
-      '📍 觀塘區',
-      '📍 油尖旺區',
-      '📍 新界離島區',
-      '📍 港島區',
-      '📍 沙田區',
-      '📍 荃灣區',
-      '📍 嘉翠園邨巴',
-      '📍 葵涌APM',
-      '📍 葵涌SiS',
-    ];
+    const DISTRICT_LABEL = {
+      '📍 葵涌APM': '📍 葵涌 APM',
+      '📍 葵涌SiS': '📍 葵涌 SiS',
+    };
 
-    const SECTION_DIVIDER_BEFORE = new Set([
-      '📍 葵涌APM',
-      '📍 葵涌SiS',
-    ]);
+    const SECTION_CONFIG = [
+      {
+        id: 'ycs',
+        title: '業成街',
+        blockClass: 'section-block-ycs',
+        showDistrictHeaders: true,
+        districts: [
+          '📍 觀塘區',
+          '📍 油尖旺區',
+          '📍 新界離島區',
+          '📍 港島區',
+          '📍 沙田區',
+          '📍 荃灣區',
+          '📍 嘉翠園邨巴',
+        ],
+      },
+      {
+        id: 'np',
+        title: '北角',
+        blockClass: 'section-block-np',
+        showDistrictHeaders: false,
+        districts: ['📍 北角'],
+      },
+      {
+        id: 'kc',
+        title: '葵涌',
+        blockClass: 'section-block-kc',
+        showDistrictHeaders: true,
+        districts: ['📍 葵涌APM', '📍 葵涌SiS'],
+      },
+    ];
 
     let parsedRoutes = [];
     let hkPublicHolidays = new Set();
@@ -470,7 +492,7 @@ KMB 42C 青衣(長亨邨) 觀塘轉車站  https://data.etabus.gov.hk/v1/transpo
 
     function renderEtaBadges(minutesArr) {
       if (!minutesArr || minutesArr.length === 0) {
-        return `<span class="no-data-msg">尾班車已過</span>`;
+        return `<span class="no-data-msg">尾班車已開出</span>`;
       }
       return `<div class="eta-container">` + minutesArr.map(min => {
         let colorClass = 'eta-later';
@@ -479,6 +501,26 @@ KMB 42C 青衣(長亨邨) 觀塘轉車站  https://data.etabus.gov.hk/v1/transpo
         const displayText = min === 0 ? '即將' : `${min}分`;
         return `<span class="badge-eta ${colorClass}">${displayText}</span>`;
       }).join('') + `</div>`;
+    }
+
+    function appendRouteRow(tbody, item, alt, blockClass) {
+      const tr = document.createElement('tr');
+      tr.className = 'bus-row ' + blockClass + (alt ? ' row-alt' : '');
+      tr.innerHTML = `
+        <td class="bus-cell"><span class="badge-route">${item.route}</span></td>
+        <td class="bus-cell" title="${item.direction}">${item.direction}</td>
+        <td class="bus-cell">${renderEtaBadges(item.etas)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    function appendSpacerRow(tbody, count = 1) {
+      for (let i = 0; i < count; i++) {
+        const tr = document.createElement('tr');
+        tr.className = 'table-spacer-row';
+        tr.innerHTML = '<td colspan="3"></td>';
+        tbody.appendChild(tr);
+      }
     }
 
     async function refreshAllBusEtas() {
@@ -495,44 +537,49 @@ KMB 42C 青衣(長亨邨) 觀塘轉車站  https://data.etabus.gov.hk/v1/transpo
       );
 
       const groupedByDistrict = {};
-      DISTRICT_ORDER.forEach(dist => { groupedByDistrict[dist] = []; });
       routeResults.forEach(item => {
-        if (groupedByDistrict[item.district]) {
-          groupedByDistrict[item.district].push(item);
-        } else {
-          groupedByDistrict[item.district] = [item];
-        }
+        if (!groupedByDistrict[item.district]) groupedByDistrict[item.district] = [];
+        groupedByDistrict[item.district].push(item);
       });
 
-      const tableBody = document.getElementById('bus-table-body');
-      tableBody.innerHTML = '';
+      const tbody = document.getElementById('bus-table-body');
+      tbody.innerHTML = '';
 
-      DISTRICT_ORDER.forEach(districtName => {
-        const districtRoutes = groupedByDistrict[districtName] || [];
-        const activeRoutes = districtRoutes.filter(r => r.etas && r.etas.length > 0);
-        if (activeRoutes.length === 0) return;
+      let headerSpacersDone = false;
+      let firstSection = true;
 
-        if (SECTION_DIVIDER_BEFORE.has(districtName)) {
-          const sepTr = document.createElement('tr');
-          sepTr.className = 'section-sep';
-          sepTr.innerHTML = `<td colspan="3"><span class="section-sep-line"></span></td>`;
-          tableBody.appendChild(sepTr);
+      SECTION_CONFIG.forEach((cfg) => {
+        const activeByDistrict = [];
+        cfg.districts.forEach(districtName => {
+          const routes = (groupedByDistrict[districtName] || []).filter(r => r.etas && r.etas.length > 0);
+          if (routes.length) activeByDistrict.push({ districtName, routes });
+        });
+        if (activeByDistrict.length === 0) return;
+
+        if (!headerSpacersDone) {
+          appendSpacerRow(tbody, 5);
+          headerSpacersDone = true;
+        } else if (!firstSection) {
+          appendSpacerRow(tbody, 1);
         }
+        firstSection = false;
 
-        const headerTr = document.createElement('tr');
-        headerTr.className = 'district-header-row';
-        headerTr.innerHTML = `<th colspan="3">${districtName}</th>`;
-        tableBody.appendChild(headerTr);
+        const titleTr = document.createElement('tr');
+        titleTr.className = 'section-title-row ' + cfg.blockClass;
+        titleTr.innerHTML = `<th colspan="3">${cfg.title}</th>`;
+        tbody.appendChild(titleTr);
 
-        activeRoutes.forEach(item => {
-          const tr = document.createElement('tr');
-          tr.className = 'bus-row';
-          tr.innerHTML = `
-            <td class="bus-cell"><span class="badge-route">${item.route}</span></td>
-            <td class="bus-cell" title="${item.direction}">${item.direction}</td>
-            <td class="bus-cell">${renderEtaBadges(item.etas)}</td>
-          `;
-          tableBody.appendChild(tr);
+        appendSpacerRow(tbody, 1);
+
+        activeByDistrict.forEach(({ districtName, routes }) => {
+          if (cfg.showDistrictHeaders) {
+            const label = DISTRICT_LABEL[districtName] || districtName;
+            const headerTr = document.createElement('tr');
+            headerTr.className = 'district-header-row ' + cfg.blockClass;
+            headerTr.innerHTML = `<th colspan="3">${label}</th>`;
+            tbody.appendChild(headerTr);
+          }
+          routes.forEach((item, i) => appendRouteRow(tbody, item, i % 2 === 1, cfg.blockClass));
         });
       });
     }
