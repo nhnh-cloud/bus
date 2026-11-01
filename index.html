@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>交通 ETA v4.5</title>
+  <title>交通 ETA v4.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -278,7 +278,7 @@
   <div class="page">
 
     <header class="site-header">
-      <div class="site-title">交通 ETA <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">v4.4</span></div>
+      <div class="site-title">交通 ETA <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">v4.7</span></div>
       <div class="site-meta">
         <div class="timestamp" id="header-timestamp">—</div>
         <div class="update-counter" id="update-counter">更新: 0秒前</div>
@@ -297,7 +297,7 @@
     </table>
 
     <footer class="page-footer">
-      巴士：KMB / GMB / 邨巴時刻表 · v4.4
+      巴士：KMB / GMB / 邨巴時刻表 · v4.7
     </footer>
   </div>
 
@@ -461,7 +461,7 @@ KMB 619 中環 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/
     async function fetchRouteEta(routeObj) {
       const now = new Date();
       if (routeObj.targetSrc === 'SCHEDULE_GREENKNOLL') {
-        return calculateShuttleEtas(now);
+        return calculateShuttleEtas(now).map(mins => ({ mins, isFinal: false }));
       }
       if (!routeObj.targetSrc.startsWith('https://')) return [];
 
@@ -471,34 +471,53 @@ KMB 619 中環 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/
         const json = await response.json();
         let etaArr = [];
 
+        // Keep upcoming ETAs plus a short grace window for buses still
+        // listed after they just passed (minutes >= -2).
+        const GRACE_MIN = -2;
+        const isFinalRemark = (en, tc) => {
+          const e = (en || '').toLowerCase();
+          const t = tc || '';
+          return e.includes('final') || t.includes('最後') || t.includes('尾班');
+        };
         if (routeObj.busCoId === 'GMB') {
           if (json?.data?.eta && Array.isArray(json.data.eta)) {
-            etaArr = json.data.eta.map(item => item.diff).filter(diff => diff >= 0);
+            etaArr = json.data.eta
+              .map(item => ({
+                mins: item.diff,
+                isFinal: isFinalRemark(item.remarks_en || item.rmk_en, item.remarks_tc || item.rmk_tc)
+              }))
+              .filter(x => Number.isFinite(x.mins) && x.mins >= GRACE_MIN);
           }
         } else {
           if (json?.data && Array.isArray(json.data)) {
             etaArr = json.data
               .filter(item => item.eta)
-              .map(item => Math.floor((new Date(item.eta) - now) / 60000))
-              .filter(diff => diff >= 0);
+              .map(item => ({
+                mins: Math.floor((new Date(item.eta) - now) / 60000),
+                isFinal: isFinalRemark(item.rmk_en, item.rmk_tc)
+              }))
+              .filter(x => x.mins >= GRACE_MIN);
           }
         }
-        return etaArr.sort((a, b) => a - b).slice(0, 3);
+        return etaArr.sort((a, b) => a.mins - b.mins);
       } catch (err) {
         console.warn(`Failed to fetch ETA for ${routeObj.route}:`, err);
         return [];
       }
     }
 
-    function renderEtaBadges(minutesArr) {
-      if (!minutesArr || minutesArr.length === 0) {
+    function renderEtaBadges(etaItems) {
+      if (!etaItems || etaItems.length === 0) {
         return `<span class="no-data-msg">尾班車已開出</span>`;
       }
-      return `<div class="eta-container">` + minutesArr.map(min => {
+      return `<div class="eta-container">` + etaItems.map(item => {
+        const min = typeof item === 'number' ? item : item.mins;
+        const isFinal = typeof item === 'object' && !!item.isFinal;
         let colorClass = 'eta-later';
         if (min < 9) colorClass = 'eta-soon';
         else if (min <= 15) colorClass = 'eta-mid';
-        const displayText = min === 0 ? '即將' : `${min}分`;
+        const timeText = min <= 0 ? '即將' : `${min}分`;
+        const displayText = isFinal ? `${timeText}·尾班` : timeText;
         return `<span class="badge-eta ${colorClass}">${displayText}</span>`;
       }).join('') + `</div>`;
     }
