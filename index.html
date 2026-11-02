@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>交通 ETA v4.7</title>
+  <title>交通 ETA v4.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -278,7 +278,7 @@
   <div class="page">
 
     <header class="site-header">
-      <div class="site-title">交通 ETA <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">v4.7</span></div>
+      <div class="site-title">交通 ETA <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">v4.9</span></div>
       <div class="site-meta">
         <div class="timestamp" id="header-timestamp">—</div>
         <div class="update-counter" id="update-counter">更新: 0秒前</div>
@@ -297,7 +297,7 @@
     </table>
 
     <footer class="page-footer">
-      巴士：KMB / GMB / 邨巴時刻表 · v4.7
+      巴士：KMB / GMB / 邨巴時刻表 · v4.9
     </footer>
   </div>
 
@@ -335,8 +335,8 @@ KMB 38 葵盛(東) 觀塘轉車站 https://data.etabus.gov.hk/v1/transport/kmb/e
 KMB 40P 荃灣 觀塘轉車站 https://data.etabus.gov.hk/v1/transport/kmb/eta/671775E6AF279B42/40P/1 葵涌SiS
 KMB 42C 青衣(長亨邨) 觀塘轉車站 https://data.etabus.gov.hk/v1/transport/kmb/eta/671775E6AF279B42/42C/1 葵涌SiS
 
-KMB 601 金鐘 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/5AAC6A858427D04E/601/1 北角
-KMB 619 中環 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/5AAC6A858427D04E/619/1 北角
+KMB 601 金鐘 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/5AAC6A858427D04E/601/1|https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/001518/601 北角
+KMB 619 中環 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/5AAC6A858427D04E/619/1|https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/001518/619 北角
 
     `.trim();
 
@@ -463,47 +463,68 @@ KMB 619 中環 觀塘游泳池  https://data.etabus.gov.hk/v1/transport/kmb/eta/
       if (routeObj.targetSrc === 'SCHEDULE_GREENKNOLL') {
         return calculateShuttleEtas(now).map(mins => ({ mins, isFinal: false }));
       }
-      if (!routeObj.targetSrc.startsWith('https://')) return [];
 
-      try {
-        const response = await fetch(routeObj.targetSrc);
-        if (!response.ok) return [];
-        const json = await response.json();
-        let etaArr = [];
+      // Always fetch every URL in the row (join with |). Never wait for one
+      // operator to go empty before checking the other.
+      const urls = String(routeObj.targetSrc)
+        .split('|')
+        .map(u => u.trim())
+        .filter(u => u.startsWith('https://'));
+      if (urls.length === 0) return [];
 
-        // Keep upcoming ETAs plus a short grace window for buses still
-        // listed after they just passed (minutes >= -2).
-        const GRACE_MIN = -2;
-        const isFinalRemark = (en, tc) => {
-          const e = (en || '').toLowerCase();
-          const t = tc || '';
-          return e.includes('final') || t.includes('最後') || t.includes('尾班');
-        };
-        if (routeObj.busCoId === 'GMB') {
-          if (json?.data?.eta && Array.isArray(json.data.eta)) {
-            etaArr = json.data.eta
-              .map(item => ({
-                mins: item.diff,
-                isFinal: isFinalRemark(item.remarks_en || item.rmk_en, item.remarks_tc || item.rmk_tc)
-              }))
-              .filter(x => Number.isFinite(x.mins) && x.mins >= GRACE_MIN);
-          }
-        } else {
-          if (json?.data && Array.isArray(json.data)) {
-            etaArr = json.data
-              .filter(item => item.eta)
-              .map(item => ({
-                mins: Math.floor((new Date(item.eta) - now) / 60000),
-                isFinal: isFinalRemark(item.rmk_en, item.rmk_tc)
-              }))
-              .filter(x => x.mins >= GRACE_MIN);
-          }
+      const GRACE_MIN = -2;
+      const isFinalRemark = (en, tc) => {
+        const e = (en || '').toLowerCase();
+        const t = tc || '';
+        return e.includes('final') || t.includes('最後') || t.includes('尾班');
+      };
+      const isOtherOperatorCycle = (en, tc, url) => {
+        const e = (en || '').toLowerCase();
+        const t = tc || '';
+        // Citybus rows marked as KMB operating period are not CTB arrivals.
+        if (url.includes('citybus')) {
+          return e.includes('kmb') || t.includes('九巴');
         }
-        return etaArr.sort((a, b) => a.mins - b.mins);
-      } catch (err) {
-        console.warn(`Failed to fetch ETA for ${routeObj.route}:`, err);
-        return [];
-      }
+        // KMB rows marked as Citybus period are not KMB arrivals.
+        if (url.includes('etabus.gov.hk')) {
+          return e.includes('citybus') || e.includes('ctb') || t.includes('城巴');
+        }
+        return false;
+      };
+
+      const parseEtaJson = (url, json) => {
+        if (url.includes('etagmb.gov.hk') || routeObj.busCoId === 'GMB') {
+          if (!(json?.data?.eta && Array.isArray(json.data.eta))) return [];
+          return json.data.eta
+            .map(item => ({
+              mins: item.diff,
+              isFinal: isFinalRemark(item.remarks_en || item.rmk_en, item.remarks_tc || item.rmk_tc)
+            }))
+            .filter(x => Number.isFinite(x.mins) && x.mins >= GRACE_MIN);
+        }
+        if (!(json?.data && Array.isArray(json.data))) return [];
+        return json.data
+          .filter(item => item.eta)
+          .filter(item => !isOtherOperatorCycle(item.rmk_en, item.rmk_tc, url))
+          .map(item => ({
+            mins: Math.floor((new Date(item.eta) - now) / 60000),
+            isFinal: isFinalRemark(item.rmk_en, item.rmk_tc)
+          }))
+          .filter(x => Number.isFinite(x.mins) && x.mins >= GRACE_MIN);
+      };
+
+      const chunks = await Promise.all(urls.map(async (url) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) return [];
+          return parseEtaJson(url, await response.json());
+        } catch (err) {
+          console.warn(`Failed to fetch ETA for ${routeObj.route} (${url}):`, err);
+          return [];
+        }
+      }));
+
+      return chunks.flat().sort((a, b) => a.mins - b.mins).slice(0, 6);
     }
 
     function renderEtaBadges(etaItems) {
